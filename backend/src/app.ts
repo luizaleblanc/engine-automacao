@@ -1,5 +1,6 @@
 import express, { type Express, type Request, type Response } from "express";
 import cors from "cors";
+import helmet from "helmet";
 import { env } from "./config/env";
 import { candidateRoutes } from "./modules/candidates/candidate.routes";
 import { errorHandler } from "./shared/errors/errorHandler";
@@ -7,6 +8,7 @@ import { errorHandler } from "./shared/errors/errorHandler";
 export function createApp(): Express {
   const app = express();
 
+  app.use(helmet());
   app.use(cors({ origin: env.CORS_ORIGIN }));
   app.use(express.json());
 
