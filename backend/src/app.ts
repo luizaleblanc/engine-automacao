@@ -1,6 +1,7 @@
 import express, { type Express, type Request, type Response } from "express";
 import cors from "cors";
 import { env } from "./config/env";
+import { candidateRoutes } from "./modules/candidates/candidate.routes";
 import { errorHandler } from "./shared/errors/errorHandler";
 
 export function createApp(): Express {
@@ -13,7 +14,7 @@ export function createApp(): Express {
     res.status(200).json({ status: "ok" });
   });
 
-  // Rotas de domínio serão registradas aqui nos próximos passos.
+  app.use("/candidates", candidateRoutes);
 
   app.use(errorHandler);
 
