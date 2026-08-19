@@ -39,7 +39,8 @@ backend/
 
 frontend/
   src/
-    features/candidates/        → formulário, dashboard, hook de dados
+    features/candidates/        → formulário, dashboard, histórico de tentativas, hook de dados
+    components/                 → Toast e Skeleton — genéricos, sem conhecimento do domínio
     services/api/               → cliente HTTP tipado + mapeamento de erros
     types/                      → contratos compartilhados com o backend
 ```
@@ -79,6 +80,10 @@ POST /candidates
 POST /candidates/:id/reprocess
       ├─► só aceito se status atual == "FALHA" (validado no backend, não só na UI)
       └─► reabre o ciclo: PROCESSANDO → tentativas → SUCESSO ou FALHA de novo
+
+GET /candidates/:id/attempts
+      └─► lista cada tentativa já registrada (número, sucesso/falha, código HTTP,
+          mensagem de erro, horário) — a auditoria que o retry já gravava, agora visível
 ```
 
 O ponto crítico técnico é o `automationQueue.enqueue()`
@@ -152,18 +157,39 @@ compilaria e o bug só apareceria em runtime, silenciosamente, na primeira requi
   permite tratamento cirúrgico: e-mail duplicado vira erro *no campo* E-mail, em vez de um
   alerta genérico no topo da tela.
 
-## 7. Docker
+## 7. Design e enriquecimento da interface
+
+O visual passou por duas rodadas: primeiro um redesign completo (tema "painel de operações" —
+paleta neutra fria + accent teal, IBM Plex Sans + JetBrains Mono, suporte nativo a claro/escuro
+via `prefers-color-scheme`, sem depender de nenhuma dependência de UI). Depois, três
+enriquecimentos foram adicionados especificamente para dar mais profundidade ao dashboard sem
+inflar escopo:
+
+- **Histórico de tentativas expansível**: clicar no nome do candidato revela, inline na
+  própria tabela, cada tentativa registrada pelo retry (seção 3) — transforma o dashboard de
+  "lista de status" em um log de operações de verdade. Foi a peça mais substancial das três
+  porque usa dado que o backend **já gravava** e nunca tinha rota nem UI.
+- **Skeleton loading**: linhas com efeito "shimmer" ([Skeleton.tsx](frontend/src/components/Skeleton.tsx))
+  no carregamento inicial, evitando o salto de layout de um texto "Carregando..." sumindo de
+  repente. Só aparece na primeira carga — o polling em segundo plano (a cada 4s) não re-mostra
+  o skeleton, senão a tela "piscaria" a cada atualização.
+- **Toast de confirmação**: substituiu o parágrafo estático de sucesso do formulário por um
+  componente [Toast.tsx](frontend/src/components/Toast.tsx) reutilizável, com auto-dismiss e
+  fechamento manual — sinaliza "isso aconteceu agora" melhor do que texto que fica preso na
+  tela até o próximo submit.
+
+## 8. Docker
 
 Multi-stage build nos dois serviços (`deps` → `build` → `prod-deps`/`runtime`), rodando como
 usuário não-root, com o SQLite persistido num volume nomeado. O frontend é servido em produção
 por Nginx (não `vite dev`) com fallback de SPA.
 
-## 8. Gargalos reais enfrentados (e como foram resolvidos)
+## 9. Gargalos reais enfrentados (e como foram resolvidos)
 
 Esta seção documenta problemas que **realmente aconteceram** durante a construção, não
 hipóteses — cada um custou tempo de investigação real.
 
-### 8.1 Prisma + Alpine + OpenSSL
+### 9.1 Prisma + Alpine + OpenSSL
 
 **Sintoma:** o container do backend buildava, mas o Prisma Client falhava em runtime com
 `PrismaClientInitializationError: could not locate the Query Engine`.
@@ -175,7 +201,7 @@ com a do container final.
 **antes** de rodar `prisma generate` no estágio que gera o client de produção — a ordem importa,
 porque é nesse momento que o Prisma detecta qual engine baixar.
 
-### 8.2 `prisma` CLI ausente na imagem de produção
+### 9.2 `prisma` CLI ausente na imagem de produção
 
 **Sintoma:** com o Alpine já trocado, o container ainda falhava — `Error: Can't write to
 /app/node_modules/@prisma/engines`, um erro de permissão.
@@ -186,7 +212,7 @@ de escrita em `node_modules`.
 **Correção:** mover `prisma` para `dependencies` — é um caso legítimo de CLI que precisa
 existir em produção, não só em desenvolvimento.
 
-### 8.3 BuildKit + OneDrive (bug de ambiente, não de código)
+### 9.3 BuildKit + OneDrive (bug de ambiente, não de código)
 
 **Sintoma:** `docker compose build` falhava com `invalid file request .env.example`, de forma
 consistente e determinística.
@@ -198,7 +224,7 @@ ao montar o contexto de build.
 README como nota de troubleshooting, já que reaparece em qualquer build feito dentro dessa
 pasta.
 
-### 8.4 `import.meta.env` tipado como `any` por padrão
+### 9.4 `import.meta.env` tipado como `any` por padrão
 
 **Sintoma:** nada quebrava em build, mas `VITE_API_BASE_URL` estava implicitamente `any`,
 violando o critério "zero `any`" mesmo sem nenhum `any` escrito à mão.
@@ -208,7 +234,7 @@ violando o critério "zero `any`" mesmo sem nenhum `any` escrito à mão.
 `strictImportMetaEnv: unknown` e tipando `VITE_API_BASE_URL` como `string` — remove o índice
 de fallback e força erro de compilação se a variável não existir.
 
-### 8.5 Rate limiter pego pelo próprio teste
+### 9.5 Rate limiter pego pelo próprio teste
 
 Não foi bem um "problema" — foi uma validação inesperada. Ao criar ~25 candidatos em rajada
 para forçar estatisticamente um caso de `FALHA` (a taxa de sucesso do webhook simulado é 50%,
@@ -218,7 +244,18 @@ esse clique também tomou `429`. A interface reagiu corretamente (reverteu o est
 mostrou o erro na linha certa), o que acabou sendo a melhor prova possível de que o rate
 limiting e o tratamento de erro do frontend funcionam *juntos*, sob condição real de estresse.
 
-## 9. Limitações conhecidas (assumidas, não escondidas)
+### 9.6 Mensagem de commit de merge poluída pelo template do Git
+
+Ao concluir um `git commit` depois de um merge com conflitos já resolvidos manualmente, o
+commit saiu com o corpo inteiro do template padrão do Git colado na mensagem (as linhas `#
+Please enter a commit message...`) em vez de só o texto real. Sintoma de que os comentários do
+`MERGE_MSG` não foram removidos automaticamente nesse fluxo específico (provavelmente por causa
+de como o editor integrado da IDE gravou o arquivo). Como o commit ainda não tinha sido
+enviado ao GitHub, a correção foi simples: `git commit --amend -m "..."` com a mensagem limpa.
+Fica registrado porque é o tipo de detalhe fácil de deixar passar — vale sempre conferir
+`git log -1 --pretty=%B` depois de um merge assistido por IDE.
+
+## 10. Limitações conhecidas (assumidas, não escondidas)
 
 - **Fila em memória**: jobs de automação em andamento se perdem se o processo reiniciar (ver
   seção 3). Aceitável no escopo do desafio; documentado como próximo passo para produção.
@@ -227,5 +264,6 @@ limiting e o tratamento de erro do frontend funcionam *juntos*, sob condição r
   mas é uma inconsistência real que ficou de fora do escopo corrigido nesta rodada.
 - **Sem suíte de testes automatizados**: toda validação nesta sessão foi feita rodando a
   aplicação de verdade (curl, Playwright contra o app real) — não existe `*.test.ts` no
-  repositório. Funciona como prova de que o sistema se comporta corretamente, mas não
-  substitui testes versionados que rodariam em CI.
+  repositório, incluindo a rota nova `GET /candidates/:id/attempts`. Funciona como prova de
+  que o sistema se comporta corretamente, mas não substitui testes versionados que rodariam
+  em CI.
