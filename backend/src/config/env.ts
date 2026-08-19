@@ -11,6 +11,8 @@ const envSchema = z.object({
   WEBHOOK_SUCCESS_RATE: z.coerce.number().min(0).max(1).default(0.5),
   WEBHOOK_MIN_LATENCY_MS: z.coerce.number().int().nonnegative().default(200),
   WEBHOOK_MAX_LATENCY_MS: z.coerce.number().int().nonnegative().default(800),
+  AUTOMATION_MAX_RETRIES: z.coerce.number().int().positive().default(3),
+  AUTOMATION_BASE_DELAY_MS: z.coerce.number().int().positive().default(1000),
 });
 
 const parsed = envSchema.safeParse(process.env);

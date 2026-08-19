@@ -1,5 +1,6 @@
 import type { Candidate } from "@prisma/client";
 import { prisma } from "../../shared/database/prismaClient";
+import type { AutomationStatus } from "../automation/AutomationStatus";
 import type { CreateCandidateInput } from "./candidate.schema";
 
 export const candidateRepository = {
@@ -17,5 +18,9 @@ export const candidateRepository = {
 
   findByEmail(email: string): Promise<Candidate | null> {
     return prisma.candidate.findUnique({ where: { email } });
+  },
+
+  updateStatus(id: string, status: AutomationStatus): Promise<Candidate> {
+    return prisma.candidate.update({ where: { id }, data: { status } });
   },
 };

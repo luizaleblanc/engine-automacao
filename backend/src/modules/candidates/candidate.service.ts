@@ -1,3 +1,4 @@
+import { automationQueue } from "../automation/automationService";
 import { ConflictError } from "../../shared/errors/AppError";
 import type { CandidateDTO } from "./candidate.dto";
 import { toCandidateDTO } from "./candidate.mapper";
@@ -12,6 +13,10 @@ export const candidateService = {
     }
 
     const candidate = await candidateRepository.create(input);
+
+    // Disparo assíncrono e não bloqueante: a resposta HTTP não espera a automação.
+    automationQueue.enqueue(candidate.id);
+
     return toCandidateDTO(candidate);
   },
 
