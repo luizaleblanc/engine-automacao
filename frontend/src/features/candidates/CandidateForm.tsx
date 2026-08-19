@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { candidatesApi } from "../../services/api/candidatesApi";
 import { ApiError } from "../../services/api/ApiError";
 import type { Candidate } from "../../types/candidate";
+import { Toast } from "../../components/Toast";
 import {
   candidateFormSchema,
   validateCandidateForm,
@@ -22,7 +23,7 @@ export function CandidateForm({ onCreated }: CandidateFormProps) {
   const [errors, setErrors] = useState<CandidateFormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   function handleChange(field: keyof CandidateFormValues, value: string): void {
     setValues((prev) => ({ ...prev, [field]: value }));
@@ -32,7 +33,6 @@ export function CandidateForm({ onCreated }: CandidateFormProps) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     setSubmitError(null);
-    setSuccessMessage(null);
 
     const parsed = candidateFormSchema.safeParse(values);
     if (!parsed.success) {
@@ -44,7 +44,7 @@ export function CandidateForm({ onCreated }: CandidateFormProps) {
     try {
       const candidate = await candidatesApi.create(parsed.data);
       setValues(EMPTY_FORM);
-      setSuccessMessage(`Candidato "${candidate.name}" cadastrado com sucesso.`);
+      setToastMessage(`Candidato "${candidate.name}" cadastrado com sucesso.`);
       onCreated?.(candidate);
     } catch (error) {
       if (error instanceof ApiError && error.code === "ConflictError") {
@@ -136,7 +136,6 @@ export function CandidateForm({ onCreated }: CandidateFormProps) {
         </div>
 
         {submitError !== null ? <p className="form-error">{submitError}</p> : null}
-        {successMessage !== null ? <p className="form-success">{successMessage}</p> : null}
 
         <button type="submit" disabled={submitting}>
           {submitting ? "Cadastrando..." : "Cadastrar candidato"}
@@ -148,6 +147,10 @@ export function CandidateForm({ onCreated }: CandidateFormProps) {
         <br />
         Rate limit · 10 req/min em rotas de escrita
       </div>
+
+      {toastMessage !== null ? (
+        <Toast message={toastMessage} variant="success" onDismiss={() => setToastMessage(null)} />
+      ) : null}
     </form>
   );
 }

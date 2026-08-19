@@ -12,3 +12,8 @@ candidateRoutes.post(
   writeRateLimiter,
   asyncHandler(candidateController.reprocess),
 );
+candidateRoutes.get(
+  "/:id/attempts",
+  readRateLimiter,
+  asyncHandler(candidateController.listAttempts),
+);

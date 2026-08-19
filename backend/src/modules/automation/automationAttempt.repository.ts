@@ -2,6 +2,13 @@ import type { AutomationAttempt } from "@prisma/client";
 import { prisma } from "../../shared/database/prismaClient";
 
 export const automationAttemptRepository = {
+  findByCandidateId(candidateId: string): Promise<AutomationAttempt[]> {
+    return prisma.automationAttempt.findMany({
+      where: { candidateId },
+      orderBy: { attemptNumber: "asc" },
+    });
+  },
+
   record(
     candidateId: string,
     attemptNumber: number,

@@ -19,3 +19,11 @@ export interface CreateCandidateInput {
   role: string;
   linkedin: string;
 }
+
+export interface AutomationAttempt {
+  attemptNumber: number;
+  success: boolean;
+  statusCode: number | null;
+  errorMessage: string | null;
+  createdAt: string;
+}

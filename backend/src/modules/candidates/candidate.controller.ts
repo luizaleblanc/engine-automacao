@@ -19,4 +19,10 @@ export const candidateController = {
     const candidate = await candidateService.reprocess(id);
     res.status(200).json(candidate);
   },
+
+  async listAttempts(req: Request, res: Response): Promise<void> {
+    const { id } = candidateIdParamSchema.parse(req.params);
+    const attempts = await candidateService.listAttempts(id);
+    res.status(200).json(attempts);
+  },
 };

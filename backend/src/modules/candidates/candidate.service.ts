@@ -1,4 +1,7 @@
 import { automationQueue } from "../automation/automationService";
+import { automationAttemptRepository } from "../automation/automationAttempt.repository";
+import { toAutomationAttemptDTO } from "../automation/automationAttempt.mapper";
+import type { AutomationAttemptDTO } from "../automation/automationAttempt.dto";
 import { ConflictError, NotFoundError } from "../../shared/errors/AppError";
 import type { CandidateDTO } from "./candidate.dto";
 import { toCandidateDTO } from "./candidate.mapper";
@@ -41,5 +44,15 @@ export const candidateService = {
     automationQueue.enqueue(id);
 
     return toCandidateDTO(updated);
+  },
+
+  async listAttempts(id: string): Promise<AutomationAttemptDTO[]> {
+    const candidate = await candidateRepository.findById(id);
+    if (!candidate) {
+      throw new NotFoundError("Candidato não encontrado");
+    }
+
+    const attempts = await automationAttemptRepository.findByCandidateId(id);
+    return attempts.map(toAutomationAttemptDTO);
   },
 };

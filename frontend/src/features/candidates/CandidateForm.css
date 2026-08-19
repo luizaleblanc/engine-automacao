@@ -74,12 +74,6 @@
   margin: 2px 0 14px;
 }
 
-.candidate-form .form-success {
-  color: var(--st-sucesso);
-  font-size: 12.5px;
-  margin: 2px 0 14px;
-}
-
 .candidate-form button[type="submit"] {
   width: 100%;
   background: var(--accent);

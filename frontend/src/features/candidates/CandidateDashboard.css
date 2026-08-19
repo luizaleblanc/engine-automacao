@@ -182,3 +182,51 @@
   border-color: var(--border);
   cursor: not-allowed;
 }
+
+.expand-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.expand-toggle:hover {
+  color: var(--accent);
+}
+
+.expand-chevron {
+  flex: none;
+  color: var(--text-faint);
+  transition: transform 150ms ease;
+}
+
+.expand-chevron.open {
+  transform: rotate(90deg);
+}
+
+.attempt-row td {
+  background: var(--surface-2);
+  padding: 12px 18px 14px 46px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 20px;
+  color: var(--text-faint);
+  font-size: 13px;
+}
+
+.empty-state p {
+  margin: 0;
+}
