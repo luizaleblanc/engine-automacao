@@ -13,7 +13,7 @@ próprio módulo, e o disparo da automação nunca bloqueia a resposta HTTP do c
 |---|---|
 | Backend | Node.js, TypeScript, Express, Prisma ORM, SQLite, Zod, Helmet, express-rate-limit |
 | Frontend | React 19, TypeScript, Vite, Zod |
-| Infra | Docker, Docker Compose |
+| Infra | Docker, Docker Compose, Nginx (serve o build do frontend em produção) |
 
 ## Estrutura
 
@@ -45,7 +45,7 @@ frontend/   Formulário + dashboard em tempo real (React + TS)
 ## Pré-requisitos
 
 - Node.js 20+
-- Docker + Docker Compose (opcional, só para rodar o backend containerizado)
+- Docker + Docker Compose (opcional, para rodar a stack inteira com um comando)
 
 ## Rodando localmente (sem Docker)
 
@@ -81,19 +81,27 @@ npm run dev
 
 Dashboard sobe em `http://localhost:5173`.
 
-## Rodando o backend via Docker
+## Rodando a stack inteira via Docker
 
 ```powershell
 docker compose up --build
 ```
 
-Sobe a API em `http://localhost:3333`, aplicando as migrations automaticamente. O SQLite fica
-num volume nomeado (`backend-data`), persistindo entre rebuilds do container. Variáveis de
-ambiente podem ser sobrescritas antes do comando (ex.: `$env:WEBHOOK_SUCCESS_RATE=0.2`) ou via
-arquivo `.env` na raiz do projeto (lido automaticamente pelo Docker Compose).
+Sobe **backend** (`http://localhost:3333`) e **frontend** (`http://localhost:5173`, servido via
+Nginx a partir do build de produção do Vite). As migrations do Prisma são aplicadas
+automaticamente ao subir o backend, e o SQLite fica num volume nomeado (`backend-data`),
+persistindo entre rebuilds do container.
 
-> O frontend ainda roda via `npm run dev` (não está no `docker-compose.yml`) — suba-o
-> separadamente como descrito acima, apontando `VITE_API_BASE_URL` para a API.
+Variáveis de ambiente podem ser sobrescritas antes do comando (ex.:
+`$env:WEBHOOK_SUCCESS_RATE=0.2`) ou via um arquivo `.env` na raiz do projeto (lido
+automaticamente pelo Docker Compose). Note que `VITE_API_BASE_URL` é embutida no bundle do
+frontend em **build-time** (é código client-side) — se mudar essa variável, rode
+`docker compose up --build` de novo para refletir a mudança.
+
+> **Nota (Windows + OneDrive):** se o projeto estiver dentro de uma pasta sincronizada pelo
+> OneDrive, o builder padrão do Docker (BuildKit) pode falhar com `invalid file request` por
+> causa de como o OneDrive Files-On-Demand usa reparse points. Se isso acontecer, use o builder
+> clássico: `$env:DOCKER_BUILDKIT=0; docker compose up --build`.
 
 ## Variáveis de ambiente
 

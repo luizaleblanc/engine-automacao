@@ -20,5 +20,19 @@ services:
       - backend-data:/app/data
     restart: unless-stopped
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Vite embute essa URL no bundle em build-time: precisa ser o endereço que o
+        # NAVEGADOR do usuário vai usar para falar com a API (não o nome do serviço Docker).
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3333}
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
 volumes:
   backend-data:
