@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: engine-automacao-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /health
+    disk:
+      name: engine-automacao-data
+      mountPath: /app/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: file:/app/data/prod.db
+      - key: CORS_ORIGIN
+        value: https://frontend-alpha-eight-4f6briapm6.vercel.app
+      - key: WEBHOOK_SUCCESS_RATE
+        value: "0.5"
+      - key: WEBHOOK_MIN_LATENCY_MS
+        value: "200"
+      - key: WEBHOOK_MAX_LATENCY_MS
+        value: "800"
+      - key: AUTOMATION_MAX_RETRIES
+        value: "3"
+      - key: AUTOMATION_BASE_DELAY_MS
+        value: "1000"
