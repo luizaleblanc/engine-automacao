@@ -1,5 +1,5 @@
 import { automationQueue } from "../automation/automationService";
-import { ConflictError } from "../../shared/errors/AppError";
+import { ConflictError, NotFoundError } from "../../shared/errors/AppError";
 import type { CandidateDTO } from "./candidate.dto";
 import { toCandidateDTO } from "./candidate.mapper";
 import { candidateRepository } from "./candidate.repository";
@@ -23,5 +23,23 @@ export const candidateService = {
   async listAll(): Promise<CandidateDTO[]> {
     const candidates = await candidateRepository.findAll();
     return candidates.map(toCandidateDTO);
+  },
+
+  async reprocess(id: string): Promise<CandidateDTO> {
+    const candidate = await candidateRepository.findById(id);
+    if (!candidate) {
+      throw new NotFoundError("Candidato não encontrado");
+    }
+
+    if (candidate.status !== "FALHA") {
+      throw new ConflictError(
+        "Somente candidatos com automação em FALHA podem ser reprocessados",
+      );
+    }
+
+    const updated = await candidateRepository.updateStatus(id, "PROCESSANDO");
+    automationQueue.enqueue(id);
+
+    return toCandidateDTO(updated);
   },
 };

@@ -6,3 +6,4 @@ export const candidateRoutes = Router();
 
 candidateRoutes.post("/", asyncHandler(candidateController.create));
 candidateRoutes.get("/", asyncHandler(candidateController.list));
+candidateRoutes.post("/:id/reprocess", asyncHandler(candidateController.reprocess));

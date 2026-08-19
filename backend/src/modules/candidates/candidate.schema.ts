@@ -14,3 +14,7 @@ export const createCandidateSchema = z.object({
 });
 
 export type CreateCandidateInput = z.infer<typeof createCandidateSchema>;
+
+export const candidateIdParamSchema = z.object({
+  id: z.string().uuid("Id de candidato inválido"),
+});
