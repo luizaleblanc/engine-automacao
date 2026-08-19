@@ -8,6 +8,9 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3333),
   DATABASE_URL: z.string().min(1, "DATABASE_URL é obrigatória"),
   CORS_ORIGIN: z.string().min(1, "CORS_ORIGIN é obrigatória"),
+  WEBHOOK_SUCCESS_RATE: z.coerce.number().min(0).max(1).default(0.5),
+  WEBHOOK_MIN_LATENCY_MS: z.coerce.number().int().nonnegative().default(200),
+  WEBHOOK_MAX_LATENCY_MS: z.coerce.number().int().nonnegative().default(800),
 });
 
 const parsed = envSchema.safeParse(process.env);
