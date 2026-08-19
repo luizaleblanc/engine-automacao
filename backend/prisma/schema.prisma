@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// SQLite não possui suporte nativo a enums no Prisma; o domínio de valores
+// válidos (PENDENTE | PROCESSANDO | SUCESSO | FALHA) é garantido na camada
+// de aplicação via TypeScript (src/modules/automation/AutomationStatus.ts) e Zod.
+model Candidate {
+  id        String              @id @default(uuid())
+  name      String
+  email     String              @unique
+  role      String
+  linkedin  String
+  status    String              @default("PENDENTE")
+  attempts  AutomationAttempt[]
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@map("candidates")
+}
+
+model AutomationAttempt {
+  id          String    @id @default(uuid())
+  candidateId String
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  attemptNumber Int
+  success     Boolean
+  statusCode  Int?
+  errorMessage String?
+  createdAt   DateTime  @default(now())
+
+  @@index([candidateId])
+  @@map("automation_attempts")
+}
