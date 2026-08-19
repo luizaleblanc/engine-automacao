@@ -1,0 +1,24 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3333:3333"
+    environment:
+      NODE_ENV: production
+      PORT: 3333
+      # Caminho absoluto: o SQLite fica no volume nomeado, sobrevivendo a rebuilds do container.
+      DATABASE_URL: "file:/app/data/prod.db"
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      WEBHOOK_SUCCESS_RATE: ${WEBHOOK_SUCCESS_RATE:-0.5}
+      WEBHOOK_MIN_LATENCY_MS: ${WEBHOOK_MIN_LATENCY_MS:-200}
+      WEBHOOK_MAX_LATENCY_MS: ${WEBHOOK_MAX_LATENCY_MS:-800}
+      AUTOMATION_MAX_RETRIES: ${AUTOMATION_MAX_RETRIES:-3}
+      AUTOMATION_BASE_DELAY_MS: ${AUTOMATION_BASE_DELAY_MS:-1000}
+    volumes:
+      - backend-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  backend-data:

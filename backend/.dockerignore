@@ -1,0 +1,11 @@
+node_modules
+dist
+npm-debug.log*
+.env
+.env.local
+.env.*.local
+prisma/dev.db
+prisma/dev.db-journal
+*.tsbuildinfo
+.vscode
+coverage
