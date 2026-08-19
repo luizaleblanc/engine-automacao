@@ -6,10 +6,6 @@ services:
     dockerContext: ./backend
     plan: free
     healthCheckPath: /health
-    disk:
-      name: engine-automacao-data
-      mountPath: /app/data
-      sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
