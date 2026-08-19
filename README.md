@@ -1,3 +1,5 @@
+<img width="1917" height="1136" alt="image" src="https://github.com/user-attachments/assets/53cdff50-6ba0-4893-8e4f-0b4ffa2e70ce" />
+
 # Engine Resiliente de Automações
 
 Sistema de cadastro de candidatos com disparo assíncrono de automações, resiliente a falhas
