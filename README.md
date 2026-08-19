@@ -1,4 +1,4 @@
-<img width="1917" height="1136" alt="image" src="https://github.com/user-attachments/assets/53cdff50-6ba0-4893-8e4f-0b4ffa2e70ce" />
+<img width="1917" height="1135" alt="image" src="https://github.com/user-attachments/assets/1b64ddb5-d7a0-4982-823c-dedd10640987" />
 
 # Engine Resiliente de Automações
 
